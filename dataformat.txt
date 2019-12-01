@@ -9,3 +9,18 @@ Process raw into:
     3. one file contains the segment of the new sentence:
     
 }
+
+
+Final raw data (.json)
+[
+    {
+        'c1': {'value': 'abdominal pain', 'span': [7, 8]}, 
+        'c2': {'value': 'nausea', 'span': [15, 15]}, 
+        'r': {'value': 'PIP'}, 
+        'origin': {'line': 21, 'name': 'record-46'},
+        'txt': 'That evening , the patient again developed abdominal pain " like his pancreatitis " with nausea and vomiting , for which he was admitted to the Rehab Hospital of the Cape & Islands Hospital .'}
+    },
+    {
+        ...
+    }
+]

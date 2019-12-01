@@ -13,6 +13,17 @@ class LSTMsentence(nn.Module):
             self.lstm = nn.LSTM(self.feature_dim, self.hidden_dim, bidirectional=True)
         else:
             self.lstm = nn.LSTM(self.feature_dim, self.hidden_dim)
+    
+    def getVec(self, sentence):
+        np.array([self.embeddings.get_vector(word) for word in sentence])
+
+    
+    def forward(self, sentence):
+        embeds = self.embeddings(sentence)
+
+
+
+
         
 
 

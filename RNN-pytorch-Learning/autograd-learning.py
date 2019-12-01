@@ -57,3 +57,5 @@ for t in range(500):
     w1.grad.zero_()
     w2.grad.zero_()
 
+    
+

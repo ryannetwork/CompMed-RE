@@ -165,6 +165,9 @@ for epoch in range(n_epochs):
 
 # print(a, b)
 
+#################
+#### Model ######
+#################
 # In PyTorch, a model is represented by a regular Python class that inherits from the Module class.
 # You should call the whole model itself, as in model(x) to perform a forward pass and output predictions.
 
@@ -305,10 +308,32 @@ for epoch in range(n_epochs):
 ##############
 ### FINAL STRUCTURE
 ##############
+def make_train_step(model, loss_fn, optimizer):
+    # Builds function that performs a step in the train loop
+    def train_step(x, y):
+        # Sets model to TRAIN mode
+        model.train()
+        # Makes predictions
+        yhat = model(x)
+        # Computes loss
+        loss = loss_fn(y, yhat)
+        # Computes gradients
+        loss.backward()
+        # Updates parameters and zeroes gradients
+        optimizer.step()
+        optimizer.zero_grad()
+        # Returns the loss
+        return loss.item()
+    
+    # Returns the function that will be called inside the train loop
+    return train_step
+
+
+
 losses = []
 val_losses = []
 train_step = make_train_step(model, loss_fn, optimizer)
-
+""" 
 for epoch in range(n_epochs):
     for x_batch, y_batch in train_loader:
         x_batch = x_batch.to(device)
@@ -327,5 +352,5 @@ for epoch in range(n_epochs):
             yhat = model(x_val)
             val_loss = loss_fn(y_val, yhat)
             val_losses.append(val_loss.item())
-
-print(model.state_dict())
+ """
+# print(model.state_dict())
