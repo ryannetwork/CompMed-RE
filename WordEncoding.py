@@ -38,7 +38,7 @@ class TextEncoder:
         vec_coll = np.concatenate(vec_coll)
         return vec_coll
 
-all_instance = RawData()
+""" all_instance = RawData()
 word_model = BioWordVec()
 
 print("Process into BioWordVec")
@@ -49,7 +49,7 @@ for i in all_instance.data:
     Big_tensor.append(new_array)
 
 print(Big_tensor[0].shape)
-
+ """
 
 
 
