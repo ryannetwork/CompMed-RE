@@ -8,19 +8,20 @@ from torch.nn import functional as F
 
 
 class LSTMsentence(nn.Module):
-    def __init__(self, feature_dim, hidden_dim, batch_size, output_dim=1, bidirection=False, num_layers=1):
+    def __init__(self, feature_dim, hidden_dim, batch_size, output_dim, padding, bidirection=False, num_layers=1):
         super(LSTMsentence, self).__init__()
         self.feature_dim = feature_dim
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.num_layers = num_layers
+        self.padding = padding
 
         # Define the LSTM layer
         self.lstm = nn.LSTM(self.feature_dim, self.hidden_dim, self.num_layers)
 
         # max pooling layer
-        self.maxpool = nn.MaxPool1d(1)
-        self.out = nn.Linear(self.hidden_dim, 1)
+        # self.maxpool = nn.MaxPool1d(self.padding)
+        self.out = nn.Linear(self.hidden_dim, output_dim)
 
         # hidden layer
         self.hidden = self.init_hidden()
@@ -31,14 +32,16 @@ class LSTMsentence(nn.Module):
         return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim), 
                 torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
-    def forward(self, X_train, Y_train, X_len):
+    def forward(self, X_train, X_len):
 
-        X = torch.nn.utils.rnn.pack_padded_sequence(X_train, X_len, batch_first=True)
+        X = torch.nn.utils.rnn.pack_padded_sequence(X_train, X_len, batch_first=True, enforce_sorted=False)
         lstm_out, self.hidden = self.lstm(X, self.hidden)
-        
-        lstm_out = lstm_out.view(self.hidden_dim, -1)
-        pool = self.maxpool(lstm_out)
-        return F.log_softmax(pool, dim=1)
+        lstm_out,_ = torch.nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True)
+        #lstm_out = lstm_out.view(self.hidden_dim, -1)
+        # pool the max
+        pool = torch.max(lstm_out, 1, keepdim=True)[0]
+        out = self.out(pool)
+        return F.softmax(out, dim=1)
 
 
    

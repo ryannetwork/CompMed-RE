@@ -5,10 +5,17 @@ import random
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torch.utils.data import Dataset, TensorDataset
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
+from torch.nn import functional as F
+
 
 # parameters
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# settings for trainning
+feature_dim = 200
+hidden_dim = 100
+batch_size = 128
 
 
 #### 
@@ -51,48 +58,50 @@ X_len = torch.tensor(Big_sen_len)
 TRAIN_PART = 0.8
 Big_tensor_train_index = random.sample(range(len(X_Big)), round(TRAIN_PART * len(X_Big)))
 Big_tensor_test_index = [i for i in range(len(Big)) if i not in Big_tensor_train_index]
+# train
 X_train = X_Big[Big_tensor_train_index, :, :]
+X_train_len = X_len[Big_tensor_train_index,]
+Y_train = Y_Big[Big_tensor_train_index,]
+# train
 X_test = X_Big[Big_tensor_test_index, :, :]
+X_test_len = X_len[Big_tensor_test_index,]
+Y_test = Y_Big[Big_tensor_test_index, ]
 
 
+####### task: create costom Dataset instance and DataLoader
+train_data = CustomDataset(X_train, Y_train, X_train_len)
+test_data = CustomDataset(X_test, Y_test, X_test_len)
 
-####### task: create costome Dataset instance and DataLoader
-train_data = CustomDataset(x_train_tensor, y_train_tensor)
-####### task: convert all data into PackedSequence Object 
-### 
-
-
-
+### data loader
+train_loader = DataLoader(dataset=train_data, batch_size=10, shuffle=True)
 
 
-# settings for trainning
-feature_dim = 200
-hidden_dim = 100
-batch_size = 128
-net = LSTMsentence(feature_dim, hidden_dim, batch_size)
+####### task: Training!
+net = LSTMsentence(feature_dim, hidden_dim, batch_size, len(relations), padding=max_sen_len)
 
-
-import torch.optim as optim
 optimizer = optim.Adam(net.parameters(), lr=0.001)
 
 EPOCHS = 3
 
 # train
 for epoch in range(EPOCHS):
-    for data in Big_tensor_train:
-        X, y = data
+    for data in train_loader:
+        X_train, Y_train, X_len = data
         net.zero_grad()
-        print(type(X))
-        output = net(X)
-        loss = torch.exp(output)/torch.sum(torch.exp(output), dim=1).view(-1,1)
+        output = net(X_train, X_len)
+        loss = F.nll_loss(output, Y_train)
         loss.backward()
         optimizer.step()
     print(loss)
 
 
-
-
-
+# dev
+for data in train_loader:
+    break
+X_train, Y_train, X_len = data
+net.zero_grad()
+output = net(X_train, X_len)
+loss = F.nll_loss(output, Y_train)
 
 
 # def main():
