@@ -41,7 +41,8 @@ class LSTMsentence(nn.Module):
         # pool the max
         pool = torch.max(lstm_out, 1, keepdim=True)[0]
         out = self.out(pool)
-        return F.softmax(out, dim=1)
+        #print(out)
+        return F.softmax(out, dim=0)
 
 
    

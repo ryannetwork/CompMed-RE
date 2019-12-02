@@ -15,7 +15,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # settings for trainning
 feature_dim = 200
 hidden_dim = 100
-batch_size = 128
+batch_size = 10
 
 
 #### 
@@ -27,14 +27,25 @@ for i in all_instance.data:
     txt = TextEncoder(i['txt'], word_model)
     new_array = txt.to_embeddings().reshape(txt.token_nums, -1)
     relation = i['r']['value']
+    # y one hot array
     Big_tensor.append((new_array, relation))
 
 
-
-####### task: convert relation to class num (done)
+####### task: convert relation to class num array (done)
 relations = list(set([i[1] for i in Big_tensor]))
 rel_to_ix = {relations[i]:i for i in range(len(relations))}
+max_rel_len = len(relations)
+def to_onehot(rel_ix, max_rel_len):
+    outarray = np.zeros(max_rel_len)
+    outarray[rel_ix] = 1
+    return outarray
+
+
+    
+# Big = [(Big_tensor[i][0], to_onehot(rel_to_ix[Big_tensor[i][1]], max_rel_len)) for i in range(len(Big_tensor))] 
 Big = [(Big_tensor[i][0], rel_to_ix[Big_tensor[i][1]]) for i in range(len(Big_tensor))] 
+
+
 
 
 ###### task: convert data into torch.tensor and get padded and stack into BIGGG tensor (Done)
@@ -51,7 +62,8 @@ Big_p = [(pad_tensor(i[0], max_sen_len), i[1]) for i in Big]
 ### Big tensor real
 X_Big = torch.stack([i[0] for i in Big_p])
 Y_Big = torch.stack([i[1] for i in Big_p])
-X_len = torch.tensor(Big_sen_len)
+X_Len = torch.tensor(Big_sen_len)
+
 
 
 ###### Training / testing split
@@ -60,11 +72,11 @@ Big_tensor_train_index = random.sample(range(len(X_Big)), round(TRAIN_PART * len
 Big_tensor_test_index = [i for i in range(len(Big)) if i not in Big_tensor_train_index]
 # train
 X_train = X_Big[Big_tensor_train_index, :, :]
-X_train_len = X_len[Big_tensor_train_index,]
+X_train_len = X_Len[Big_tensor_train_index,]
 Y_train = Y_Big[Big_tensor_train_index,]
 # train
 X_test = X_Big[Big_tensor_test_index, :, :]
-X_test_len = X_len[Big_tensor_test_index,]
+X_test_len = X_Len[Big_tensor_test_index,]
 Y_test = Y_Big[Big_tensor_test_index, ]
 
 
@@ -73,7 +85,7 @@ train_data = CustomDataset(X_train, Y_train, X_train_len)
 test_data = CustomDataset(X_test, Y_test, X_test_len)
 
 ### data loader
-train_loader = DataLoader(dataset=train_data, batch_size=10, shuffle=True)
+train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
 
 
 ####### task: Training!
@@ -89,8 +101,9 @@ for epoch in range(EPOCHS):
         X_train, Y_train, X_len = data
         net.zero_grad()
         output = net(X_train, X_len)
-        loss = F.nll_loss(output, Y_train)
-        loss.backward()
+        loss = torch.nn.CrossEntropyLoss()
+        L = loss(output.view(batch_size,-1), Y_train.long())
+        L.backward()
         optimizer.step()
     print(loss)
 
@@ -101,7 +114,9 @@ for data in train_loader:
 X_train, Y_train, X_len = data
 net.zero_grad()
 output = net(X_train, X_len)
-loss = F.nll_loss(output, Y_train)
+loss = torch.nn.CrossEntropyLoss()
+L = loss(output.view(batch_size,-1), Y_train.long())
+L.backward()
 
 
 # def main():
