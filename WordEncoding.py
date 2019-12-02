@@ -2,7 +2,7 @@
 from gensim.models import KeyedVectors
 import json
 import torch
-
+import numpy as np
 class BioWordVec:
     def __init__(self, path = "/home/compmed/CompMed-RE/data/BioWordVec/bio_embedding_extrinsic"):
         print("Loading Word Embeddings from pretrained data ... ")
@@ -43,12 +43,14 @@ word_model = BioWordVec()
 
 print("Process into BioWordVec")
 Big_tensor = []
-for i in all_instnce.data:
+for i in all_instance.data:
     txt = TextEncoder(i['txt'], word_model)
-    new_array = txt.to_embeddings().reshape(1, txt.token_nums, -1)
+    new_array = txt.to_embeddings().reshape(txt.token_nums, 1 , -1)
     Big_tensor.append(new_array)
 
-Big_tensor = np.concatenate(Big_tensor)
+print(Big_tensor[0].shape)
+
+
 
 
 
